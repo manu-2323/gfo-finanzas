@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="theme-color" content="#0f5c4d">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Análisis y Planeación Financiera</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230f5c4d'/%3E%3Cpath d='M5 18V11M10 18V6M15 18v-9M20 18v-5' stroke='white' stroke-width='2.2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="menu-fondo" id="menu-fondo"></div>
+    <aside class="menu" id="menu-lateral">
+      <div class="marca">
+        <span class="marca-logo">GFO</span>
+        <div><strong>Análisis y Planeación</strong><small>Financiera</small></div>
+      </div>
+      <nav id="navegacion"></nav>
+      <div id="usuario-caja" class="usuario-caja"></div>
+    </aside>
+    <main class="contenido">
+      <header class="barra">
+        <button type="button" class="btn-menu" id="btn-menu" aria-label="Mostrar u ocultar el menú" aria-expanded="true">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="barra-textos">
+          <h1 id="titulo-pagina"></h1>
+          <p id="subtitulo-pagina"></p>
+        </div>
+      </header>
+      <section id="vista"></section>
+    </main>
+  </div>
+
+  <script src="librerias/chart.umd.js"></script>
+  <script src="librerias/supabase.js"></script>
+  <script src="librerias/xlsx.bundle.js"></script>
+  <script src="js/core/config.js"></script>
+  <script src="js/core/formato.js"></script>
+  <script src="js/core/validacion.js"></script>
+  <script src="js/core/fechas.js"></script>
+  <script src="js/core/datos.js"></script>
+  <script src="js/core/supabase.js"></script>
+  <script src="js/core/empresas.js"></script>
+  <script src="js/core/plantillas.js"></script>
+  <script src="js/ui/seleccion.js"></script>
+  <script src="js/core/lectura.js"></script>
+  <script src="js/ui/menu.js"></script>
+  <script src="js/modulos/panel.js"></script>
+  <script src="js/modulos/estados.js"></script>
+  <script src="js/modulos/analisis.js"></script>
+  <script src="js/modulos/analisis-pares.js"></script>
+  <script src="js/modulos/equilibrio.js"></script>
+  <script src="js/modulos/apalancamiento.js"></script>
+  <script src="js/modulos/flujo.js"></script>
+  <script src="js/modulos/presupuestos.js"></script>
+  <script src="js/modulos/proforma.js"></script>
+  <script src="js/modulos/personal.js"></script>
+  <script src="js/modulos/inventario.js"></script>
+  <script src="js/modulos/formulas.js"></script>
+  <script src="js/modulos/configuracion.js"></script>
+  <script src="js/modulos/lectura-modulos.js"></script>
+  <script src="js/modulos/lectura-3c.js"></script>
+  <script src="js/modulos/exportar.js"></script>
+  <script src="js/core/tema.js"></script>
+  <script src="js/core/aviso.js"></script>
+  <script src="js/modulos/graficos.js"></script>
+  <script src="js/modulos/importar.js"></script>
+  <script src="js/modulos/alertas.js"></script>
+  <script src="js/modulos/dashboard.js"></script>
+  <script src="js/modulos/panel-personal.js"></script>
+  <script src="js/ui/animaciones.js"></script>
+  <script src="js/ui/auth.js"></script>
+  <script src="js/ui/empresas.js"></script>
+  <script src="js/ui/tutorial.js"></script>
+  <script src="js/core/vacios.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
