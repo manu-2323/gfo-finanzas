@@ -49,7 +49,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .menu{width:270px;flex:none;background:var(--tarjeta);color:var(--texto);border-right:1px solid var(--borde);padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;transition:margin-left .22s ease}
 .app.menu-cerrado .menu{margin-left:-270px}
 .menu-fondo{display:none}
-.barra{display:flex;align-items:center;gap:14px}
+.barra{display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:40;background:var(--fondo);padding:12px 0;border-bottom:1px solid var(--borde)}
 .barra-textos{min-width:0}
 .btn-menu{flex:none;background:var(--tarjeta);border:1px solid var(--borde-input);border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--primario-2);box-shadow:0 1px 3px rgba(20,26,24,.08);transition:background .15s,transform .15s,box-shadow .15s}
 .btn-menu:hover{background:var(--primario-suave);box-shadow:0 2px 8px rgba(20,26,24,.12)}
