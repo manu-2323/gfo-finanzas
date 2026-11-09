@@ -165,3 +165,22 @@ window.addEventListener('resize', () => {
     Object.values(Chart.instances).forEach(g => { try { g.resize(); } catch (e) {} });
   }, 120);
 });
+
+// Red de seguridad para los gráficos que aparecen en blanco hasta refrescar la página.
+// Un ResizeObserver avisa cada vez que el tamaño del área de contenido (#vista) cambia por
+// cualquier motivo (entrar, cambiar de módulo, abrir/cerrar el menú, rotar el celular...), y
+// ahí se le pide a todos los gráficos visibles que recalculen su tamaño.
+if (window.ResizeObserver) {
+  let _obsTemporizador = null;
+  const _vistaObservador = new ResizeObserver(() => {
+    clearTimeout(_obsTemporizador);
+    _obsTemporizador = setTimeout(() => {
+      if (typeof Chart === 'undefined') return;
+      Object.values(Chart.instances).forEach(g => { try { g.resize(); } catch (e) {} });
+    }, 60);
+  });
+  window.addEventListener('load', () => {
+    const vista = document.getElementById('vista');
+    if (vista) _vistaObservador.observe(vista);
+  });
+}
