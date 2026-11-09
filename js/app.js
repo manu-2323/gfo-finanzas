@@ -30,12 +30,17 @@ function mostrar(id) {
   }
   window.scrollTo(0, 0);
   if (typeof MenuUI !== 'undefined') MenuUI.cerrarSiMovil();
-  // Obliga a los gráficos recién creados a recalcular su tamaño una vez que la pantalla
-  // ya terminó de acomodarse (evita que queden invisibles o a medio dibujar hasta refrescar).
+  // Los graficos que se crean justo al cambiar de modulo a veces nacen con el ancho en
+  // cero, porque la pantalla todavia no termino de acomodar las tarjetas en ese instante
+  // (por eso quedaban en blanco y sin respuesta al mouse hasta refrescar). En vez de solo
+  // "estirar" un grafico que ya nacio mal armado, se destruye y se vuelve a dibujar el
+  // modulo completo una vez que la pantalla ya esta acomodada, para que nazca bien desde
+  // el principio.
   if (typeof Chart !== 'undefined') {
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      Object.values(Chart.instances).forEach(g => { try { g.destroy(); } catch (e) {} });
+      try { mod.render(vista); Validar.activar(vista); } catch (e) { console.error(e); }
       window.dispatchEvent(new Event('resize'));
-      Object.values(Chart.instances).forEach(g => { try { g.resize(); } catch (e) {} });
     }));
   }
 }
