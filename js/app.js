@@ -90,15 +90,29 @@ function abrirModalEliminarCuenta() {
     if (txt !== 'ELIMINAR') { err.textContent = 'Escribe ELIMINAR, en mayúsculas, para confirmar.'; return; }
     const btn = f.querySelector('#mec-ok');
     btn.disabled = true; btn.textContent = 'Eliminando…';
+    err.textContent = '';
     try {
-      const { error } = await sb.functions.invoke('eliminar-cuenta', { method: 'POST' });
-      if (error) throw error;
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.');
+      const resp = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/eliminar-cuenta', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + session.access_token,
+          'apikey': CONFIG.SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        }
+      });
+      const texto = await resp.text();
+      let cuerpo = {};
+      try { cuerpo = texto ? JSON.parse(texto) : {}; } catch (e) {}
+      if (!resp.ok) throw new Error(cuerpo.error || ('El servidor respondió con error ' + resp.status + '.'));
       try { await Datos.vaciarPendientes(); } catch (e) {}
       alert('Tu cuenta fue eliminada.');
       location.hash = '';
       location.reload();
     } catch (e) {
-      err.textContent = 'No se pudo eliminar la cuenta: ' + (e.message || e);
+      console.error(e);
+      err.textContent = 'No se pudo eliminar la cuenta: ' + (e.message || e) + ' (revisa la consola con F12 para más detalle).';
       btn.disabled = false; btn.textContent = 'Eliminar mi cuenta';
     }
   });
