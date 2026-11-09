@@ -12,8 +12,15 @@ const Fmt = {
   veces(n, d = 2) { return Fmt.num(n, d) === '—' ? '—' : Fmt.num(n, d) + ' veces'; },
   dias(n, d = 2) { return Fmt.num(n, d) === '—' ? '—' : Fmt.num(n, d) + ' días'; },
   // Convierte el texto de un campo (puede traer comas de miles) a un número limpio.
+   // Convierte el texto de un campo (puede traer comas de miles) a un número limpio.
   aNum(v) {
     const x = Number(String(v).replace(/,/g, '').trim());
     return isFinite(x) ? x : 0;
+  },
+  // Monto corto para que quepa como etiqueta pegada a una barra o un punto del gráfico
+  corto(v) {
+    const x = Number(v); if (!isFinite(x)) return '';
+    const a = Math.abs(x), s = x < 0 ? '-' : '';
+    return s + (a >= 1e6 ? (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + ' M' : a >= 1e3 ? (a / 1e3).toFixed(a >= 1e4 ? 0 : 1) + ' mil' : a.toFixed(0));
   }
 };
