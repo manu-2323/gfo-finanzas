@@ -38,6 +38,14 @@ const Tema = {
       easing: 'easeOutQuart',
       delay: c => (c.type === 'data' && c.mode === 'default') ? c.dataIndex * 45 : 0
     };
+    // El cursor ya no necesita caer justo sobre la barra, el punto o la porción: basta con acercarse
+    Chart.defaults.interaction = { mode: 'nearest', intersect: false };
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.titleFont = { weight: '700' };
+    Chart.defaults.plugins.tooltip.displayColors = true;
+    Chart.defaults.elements.point.hoverRadius = 6;
+    Chart.defaults.elements.point.hitRadius = 10;
   }
 };
 Tema.chart();
