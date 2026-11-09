@@ -39,26 +39,54 @@ const ExportarPDF = {
   },
 
   // Dibuja una tabla; si "primera" es true, abre página nueva. Devuelve la posición para la siguiente tabla.
+  // Acepta también la forma tabla(titulo, head, body, true) que usan los módulos.
   tabla(titulo, head, body, y, primera) {
+    if (y === true) { primera = true; y = null; }
     const doc = ExportarPDF.doc, P = ExportarPDF.pal();
+    ExportarPDF.tituloActual = titulo;
     if (primera) doc.addPage();
+    const rojo = ExportarPDF.rgb(P.malo);
     doc.autoTable({
       startY: y || 72,
       head: [head], body,
-      styles: { font: 'helvetica', fontSize: 9, cellPadding: 5, textColor: [31, 42, 58], overflow: 'linebreak' },
+      styles: { font: 'helvetica', fontSize: 9, cellPadding: 5, textColor: [31, 42, 58], overflow: 'linebreak', valign: 'middle' },
       headStyles: { fillColor: ExportarPDF.rgb(P.marino), textColor: [255, 255, 255], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [243, 245, 248] },
       columnStyles: ExportarPDF.colsNum(head.length),
-      margin: { left: 40, right: 40, top: 70 },
+      margin: { left: 40, right: 40, top: 70, bottom: 50 },
+      rowPageBreak: 'avoid',
+      didParseCell: (data) => {
+        // Encabezados de columnas numéricas a la derecha (igual que los números)
+        if (data.section === 'head' && data.column.index > 0) data.cell.styles.halign = 'right';
+        if (data.section !== 'body') return;
+        const raw = data.row.raw;
+        const primero = Array.isArray(raw) ? raw[0] : null;
+        const etq = String((primero && primero.content !== undefined ? primero.content : primero) || '');
+        // Filas de totales en negrita
+        if (/^(total|utilidad (bruta|operativa|neta|antes)|efectivo final|variación neta|saldo final|roe)/i.test(etq)) {
+          data.cell.styles.fontStyle = 'bold';
+        }
+        // Montos negativos en rojo
+        if (data.column.index > 0 && typeof data.cell.raw === 'string' && /^(C\$\s*)?-\s?\d/.test(data.cell.raw)) {
+          data.cell.styles.textColor = rojo;
+        }
+      },
       didDrawPage: ExportarPDF.encabezadoPara(titulo)
     });
     return doc.lastAutoTable.finalY + 18;
   },
 
-  // Subtítulo pequeño antes de una tabla (por ejemplo "Balance General" dentro de Estados)
+  // Subtítulo antes de una tabla. Si no queda espacio, pasa a página nueva (evita títulos huérfanos).
   subtitulo(texto, y) {
     const doc = ExportarPDF.doc;
+    if (y > 660) {
+      doc.addPage();
+      ExportarPDF.encabezadoPara(ExportarPDF.tituloActual || ' ')();
+      y = 80;
+    }
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(11); doc.setTextColor(31, 42, 58); doc.text(texto, 40, y);
+    doc.setFont('helvetica', 'normal');
     return y + 10;
   },
 
@@ -67,11 +95,17 @@ const ExportarPDF = {
     if (!items || !items.length) return y;
     const doc = ExportarPDF.doc;
     let yy = y + 4;
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(9); doc.setTextColor(60, 70, 85);
     items.forEach(it => {
       const texto = '•  ' + (it.texto || it);
-      const lineas = doc.splitTextToSize(texto, 532);
-      if (yy + lineas.length * 12 > 760) { doc.addPage(); ExportarPDF.encabezadoPara(' ')(); yy = 72; }
+      const lineas = doc.splitTextToSize(texto, 520);
+      if (yy + lineas.length * 12 > 740) {
+        doc.addPage();
+        ExportarPDF.encabezadoPara(ExportarPDF.tituloActual || ' ')();
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60, 70, 85);
+        yy = 76;
+      }
       doc.text(lineas, 40, yy);
       yy += lineas.length * 12 + 4;
     });
@@ -113,7 +147,7 @@ const ExportarPDF = {
     });
     doc.setFontSize(9); doc.setTextColor(107, 119, 136);
     doc.text('Este PDF es solo para leer e imprimir: los montos no se pueden editar aquí. ' +
-      'Para seguir trabajando con los números, usa "Exportar a Excel".', 40, 760, { maxWidth: 532 });
+      'Para seguir trabajando con los números, usa "Exportar a Excel".', 40, 735, { maxWidth: 532 });
   },
 
   // ---------- Estados financieros ----------
@@ -157,16 +191,19 @@ const ExportarPDF = {
   // ---------- Punto de equilibrio ----------
   equilibrio() {
     const p = Equilibrio.obtener(), c = Equilibrio.calcular(p, p.meta), t = 'Punto de equilibrio y C-V-U';
+    const mo = v => Exportar.nd(v) === 'N/D' ? 'N/D' : Fmt.moneda(v);
+    const un = v => Exportar.nd(v) === 'N/D' ? 'N/D' : Fmt.num(v, 2);
+    const pc = v => Exportar.nd(v) === 'N/D' ? 'N/D' : Fmt.pct(v);
     let y = ExportarPDF.tabla(t, ['Concepto', 'Valor'], [
       ['Precio de venta por unidad (C$)', Fmt.moneda(p.precio)],
       ['Costo variable por unidad (C$)', Fmt.moneda(p.cv)],
       ['Costos fijos (C$)', Fmt.moneda(p.cf)],
       ['Unidades vendidas', Fmt.num(p.unidades, 2)],
-      ['Margen de contribución unitario (C$)', Exportar.nd(c.mc)],
-      ['Punto de equilibrio (unidades)', Exportar.nd(c.peU)],
-      ['Punto de equilibrio (C$)', Exportar.nd(c.peC)],
-      ['Utilidad operativa (UAII) (C$)', Exportar.nd(c.uaii)],
-      ['Margen de seguridad', Exportar.nd(c.ms)]
+      ['Margen de contribución unitario (C$)', mo(c.mc)],
+      ['Punto de equilibrio (unidades)', un(c.peU)],
+      ['Punto de equilibrio (C$)', mo(c.peC)],
+      ['Utilidad operativa (UAII) (C$)', mo(c.uaii)],
+      ['Margen de seguridad', pc(c.ms)]
     ], true);
     ExportarPDF.parrafos(ExportarPDF.lectura('equilibrio', [p]), y);
   },
@@ -289,6 +326,15 @@ const ExportarPDF = {
         errores.push(m.nombre + ': ' + e.message);
       }
     });
+      // Pie de página: empresa + "Página X de N" (la portada no lleva)
+    const total = doc.getNumberOfPages();
+    for (let i = 2; i <= total; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(140, 150, 165);
+      doc.setDrawColor(221, 227, 234); doc.line(40, 762, 572, 762);
+      doc.text(ExportarPDF.empresa(), 40, 776);
+      doc.text('Página ' + i + ' de ' + total, 572, 776, { align: 'right' });
+    }
     return { doc, errores };
   },
 
@@ -300,7 +346,33 @@ const ExportarPDF = {
 
   render(el) {
     const tipoEmpresa = (Empresas.activa && Empresas.activa.sector) || '';
-    const visibles = ExportarPDF.MODULOS.filter(m => tipoEmpresa === 'Personal' || m.id !== 'personal');
+    const personal = tipoEmpresa === 'Personal';
+
+    // En finanzas personales, el PDF solo puede tener un contenido (el presupuesto
+    // personal), así que no tiene sentido mostrar una lista para marcar/desmarcar:
+    // va directo un botón de "Generar PDF".
+    if (personal) {
+      el.innerHTML =
+        '<div class="tarjeta"><h3>Presupuesto personal en PDF</h3>' +
+        '<p class="nota-pie">El PDF es solo para leer e imprimir: nadie puede editar los montos ahí.</p>' +
+        '<div class="barra-acciones"><button class="btn" id="pdf-generar">Generar PDF</button></div>' +
+        '<div id="pdf-estado" class="cuadre"></div></div>';
+      el.querySelector('#pdf-generar').addEventListener('click', () => {
+        const est = el.querySelector('#pdf-estado');
+        const aviso = (clase, texto) => { est.className = 'cuadre ' + clase; est.textContent = texto; };
+        if (!Empresas.activa) return aviso('mal', 'Entra primero a una empresa.');
+        if (typeof window.jspdf === 'undefined') return aviso('mal', 'No se encontró librerias/jspdf.umd.min.js.');
+        try {
+          const { doc, errores } = ExportarPDF.construir(['personal']);
+          doc.save(ExportarPDF.nombreArchivo());
+          aviso('ok', 'PDF generado.' + (errores.length ? ' Avisos: ' + errores.join(' | ') : ''));
+        } catch (e) { aviso('mal', 'No se pudo generar el PDF: ' + e.message); }
+      });
+      return;
+    }
+
+    // Empresa normal: se quita "Presupuesto personal" de la lista, porque aquí no aplica.
+    const visibles = ExportarPDF.MODULOS.filter(m => m.id !== 'personal');
     const checks = visibles.map(m =>
       '<label class="chk"><input type="checkbox" value="' + m.id + '" checked> ' + m.nombre + '</label>').join('');
     el.innerHTML =
