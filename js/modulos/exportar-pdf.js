@@ -169,11 +169,19 @@ const ExportarPDF = {
     const d = Estados.obtener(), r = Estados.calcular(d), A = d.ids.map(id => Estados.etiqueta(id));
     const t = 'Análisis financiero';
     const filasRaz = [];
-    Exportar.razones(d, r).forEach(x => {
-      if (x.g) { filasRaz.push([{ content: x.g, colSpan: 3, styles: { fillColor: [238, 243, 249], textColor: [31, 58, 95], fontStyle: 'bold', halign: 'left' } }]); return; }
-      filasRaz.push([x.nombre, Exportar.nd(x.f(0)), Exportar.nd(x.f(1))]);
+    // Da formato según el tipo de razón: p = porcentaje, m = moneda, v = veces
+    const fmt = (x, v) => {
+      if (v === null || v === undefined || Exportar.nd(v) === 'N/D') return 'N/D';
+      if (x.t === 'p') return Fmt.pct(v);
+      if (x.t === 'm') return Fmt.moneda(v);
+      return Fmt.veces(v);
+    };
+    // OJO: razones() recibe UN objeto { d, r }, no dos argumentos
+    Exportar.razones({ d, r }).forEach(x => {
+      if (x.g) { filasRaz.push([{ content: x.g, colSpan: 4, styles: { fillColor: [238, 243, 249], textColor: [31, 58, 95], fontStyle: 'bold', halign: 'left' } }]); return; }
+      filasRaz.push([x.nombre, fmt(x, x.f(0)), fmt(x, x.f(1)), x.ref || '']);
     });
-    let y = ExportarPDF.tabla(t, ['Razón financiera', A[0], A[1]], filasRaz, true);
+    let y = ExportarPDF.tabla(t, ['Razón financiera', A[0], A[1], 'Referencia'], filasRaz, true);
     const ventas = Number(d.er.ventas[1]) || 0, actProm = (r[0].totalActivo + r[1].totalActivo) / 2, patProm = (r[0].patrimonio + r[1].patrimonio) / 2;
     const margen = ventas ? r[1].utilidadNeta / ventas : null, rot = actProm ? ventas / actProm : null, mult = patProm ? actProm / patProm : null;
     const roe = (margen !== null && rot !== null && mult !== null) ? margen * rot * mult : null;
