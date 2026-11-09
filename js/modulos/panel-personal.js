@@ -82,8 +82,21 @@ const PanelPersonal = {
         type: 'doughnut',
         data: { labels: c.porCat.map(z => z.c),
           datasets: [{ data: c.porCat.map(z => z.m), backgroundColor: [P.marino, P.acento, P.claro, P.ok, '#c08a2e', P.malo, '#6b7788', '#c9d5e3'] }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' },
-          tooltip: { callbacks: { label: t => t.label + ': ' + Fmt.moneda(t.raw) } } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: t => {
+                  const total = t.dataset.data.reduce((s, v) => s + v, 0);
+                  return t.label + ': ' + Fmt.moneda(t.raw) + (total ? ' (' + Fmt.pct(t.raw / total) + ')' : '');
+                }
+              }
+            }
+          }
+        }
       });
     }
   }

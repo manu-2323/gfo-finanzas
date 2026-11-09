@@ -167,8 +167,21 @@ const Dashboard = {
         Dashboard.grafs.push(new Chart(q('dash-estr'), {
           type: 'doughnut',
           data: { labels: ['Pasivo corriente', 'Pasivo no corriente', 'Patrimonio'], datasets: [{ data: partes, backgroundColor: [C.malo, C.claro, C.marino] }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' },
-            tooltip: { callbacks: { label: x => x.label + ': ' + Fmt.moneda(x.raw) } } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: x => {
+                    const total = x.dataset.data.reduce((s, v) => s + v, 0);
+                    return x.label + ': ' + Fmt.moneda(x.raw) + (total ? ' (' + Fmt.pct(x.raw / total) + ')' : '');
+                  }
+                }
+              }
+            }
+          }
         }));
       }
     }
@@ -217,9 +230,9 @@ const Dashboard = {
         ant: emp.sector || 'Empresa', titulo: 'Hola, ' + (emp.nombre || 'tu empresa'), sub: sub, extra: chips
       }) +
       Dashboard.tarjetasKpi(D, v) +
-      '<div class="tarjeta dash-8"><h3>Tendencia por período</h3><div class="dash-graf"><canvas id="dash-tend"></canvas></div></div>' +
+      '<div class="tarjeta dash-8"><h3>Tendencia por período</h3><p class="nota-pie">Pasa el mouse sobre la línea para ver el monto exacto de cada período.</p><div class="dash-graf"><canvas id="dash-tend"></canvas></div></div>' +
       '<div class="tarjeta dash-4"><h3>Alertas</h3><div class="dash-lista">' + Dashboard.lista(Dashboard.alertas(D, v)) + '</div></div>' +
-      '<div class="tarjeta dash-4"><h3>Estructura de financiamiento (' + act + ')</h3><div class="dash-graf"><canvas id="dash-estr"></canvas></div></div>' +
+       '<div class="tarjeta dash-4"><h3>Estructura de financiamiento (' + act + ')</h3><p class="nota-pie">Cada parte del círculo es una fuente de financiamiento; pasa el mouse para ver cuánto representa.</p><div class="dash-graf"><canvas id="dash-estr"></canvas></div></div>' +
       '<div class="tarjeta dash-4"><h3>Indicadores clave (' + act + ')</h3>' + Dashboard.indicadores(v) +
         '<p class="nota-pie">Semáforo con rangos de referencia generales; no son reglas absolutas.</p></div>' +
       '<div class="tarjeta dash-4"><h3>Lectura financiera</h3><div class="dash-lista">' + Dashboard.lista(Dashboard.lectura(D)) + '</div></div>' +

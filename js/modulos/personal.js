@@ -84,10 +84,26 @@ const Personal = {
         '<tr class="total"><td>Total</td><td>' + Fmt.moneda(c.totalGas) + '</td><td>' + (c.totalGas ? '100.00 %' : '—') + '</td></tr></table>';
       if (Personal.graf) { try { Personal.graf.destroy(); } catch (e) {} Personal.graf = null; }
       if (typeof Chart !== 'undefined') {
-        Personal.graf = new Chart(q('#pe-grafico'), { type: 'doughnut',
+        Personal.graf = new Chart(q('#pe-grafico'), {
+          type: 'doughnut',
           data: { labels: c.porCat.map(z => z.c), datasets: [{ data: c.porCat.map(z => z.m),
             backgroundColor: ['#1f3a5f', '#3f6fa3', '#9db4d0', '#3d8b6a', '#c08a2e', '#b25555', '#6b7788', '#c9d5e3'] }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: t => {
+                    const total = t.dataset.data.reduce((s, v) => s + v, 0);
+                    return t.label + ': ' + Fmt.moneda(t.raw) + (total ? ' (' + Fmt.pct(t.raw / total) + ')' : '');
+                  }
+                }
+              }
+            }
+          }
+        });
       }
     };
     raiz.addEventListener('input', refrescar);

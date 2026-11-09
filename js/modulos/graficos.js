@@ -106,7 +106,7 @@ const Graficos = {
         nb + ' vs ' + na + '); la tendencia y la estructura muestran todos los períodos.</div>' +
       '<div style="margin-top:16px">' + caja('gr-cascada', 'Cascada: de las ventas a la utilidad neta (' + na + ')',
         'Azul: totales. Verde: aumentos. Rojo: lo que se resta.', msgA) + '</div>' +
-      '<div class="dos-col" style="margin-top:16px">' + caja('gr-comparar', 'Comparación de períodos', '', msgC) + caja('gr-tendencia', 'Tendencia por período') + '</div>' +
+       '<div class="dos-col" style="margin-top:16px">' + caja('gr-comparar', 'Comparación de períodos', 'Compara las mismas cuentas en dos períodos, una al lado de la otra.', msgC) + caja('gr-tendencia', 'Tendencia por período', 'Pasa el mouse sobre cualquier punto para ver el monto exacto de ese período.') + '</div>' +
       '<div style="margin-top:16px">' + caja('gr-estructura', 'Estructura de financiamiento por período', 'Pasivo corriente + pasivo no corriente + patrimonio = total del activo.') + '</div>';
     const q = id => el.querySelector('#' + id);
     if (q('gr-cascada')) Graficos.cascada(q('gr-cascada'), D);
