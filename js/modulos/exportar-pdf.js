@@ -19,6 +19,9 @@ const ExportarPDF = {
     const emp = ExportarPDF.empresa();
     return () => {
       const doc = ExportarPDF.doc;
+      const pag = doc.internal.getCurrentPageInfo().pageNumber;
+      if (ExportarPDF.paginasConEncabezado.has(pag)) return; // ya se dibujo en esta pagina: evita letras montadas
+      ExportarPDF.paginasConEncabezado.add(pag);
       doc.setFontSize(9); doc.setTextColor(110, 120, 135);
       doc.text(emp, 40, 28);
       doc.text('Generado el ' + new Date().toLocaleDateString('es-NI'), 572, 28, { align: 'right' });
@@ -83,21 +86,27 @@ const ExportarPDF = {
   // ---------- Portada ----------
   portada(sel) {
     const doc = ExportarPDF.doc, P = ExportarPDF.pal(), emp = Empresas.activa || {};
+    const lineasTitulo = doc.splitTextToSize('Sistema de Análisis y Planeación Financiera', 532);
+    const altoFranja = 92 + lineasTitulo.length * 24;
     doc.setFillColor.apply(doc, ExportarPDF.rgb(P.marino));
-    doc.rect(0, 0, 612, 160, 'F');
+    doc.rect(0, 0, 612, altoFranja, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20); doc.text('Sistema de Análisis y Planeación Financiera', 40, 70, { maxWidth: 532 });
-    doc.setFontSize(12); doc.text('Reporte en PDF · Gestión Financiera Operativa', 40, 96);
+    doc.setFontSize(20); doc.text(lineasTitulo, 40, 50);
+    let y = 50 + lineasTitulo.length * 24 + 12;
+    doc.setFontSize(12); doc.text('Reporte en PDF · Gestión Financiera Operativa', 40, y);
+    y += 18;
     doc.setFontSize(10);
     doc.text('Generado el ' + new Date().toLocaleDateString('es-NI') + ' a las ' +
-      new Date().toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }), 40, 118);
+      new Date().toLocaleTimeString('es-NI', { hour: '2-digit', minute: '2-digit' }), 40, y);
     doc.setTextColor(31, 42, 58);
-    doc.setFontSize(13); doc.text('Empresa: ' + (emp.nombre || '—'), 40, 196);
+    y = altoFranja + 36;
+    doc.setFontSize(13); doc.text('Empresa: ' + (emp.nombre || '—'), 40, y);
+    y += 18;
     doc.setFontSize(10); doc.setTextColor(107, 119, 136);
-    doc.text('Tipo: ' + (emp.sector || '—') + '    ·    Moneda: C$', 40, 214);
+    doc.text('Tipo: ' + (emp.sector || '—') + '    ·    Moneda: C$', 40, y);
     const filas = ExportarPDF.MODULOS.filter(m => sel.includes(m.id)).map(m => [m.nombre]);
     doc.autoTable({
-      startY: 240, head: [['Contenido de este reporte']], body: filas,
+      startY: y + 26, head: [['Contenido de este reporte']], body: filas,
       styles: { font: 'helvetica', fontSize: 10, cellPadding: 6 },
       headStyles: { fillColor: ExportarPDF.rgb(P.marino), textColor: [255, 255, 255] },
       margin: { left: 40, right: 40 }
@@ -262,6 +271,7 @@ const ExportarPDF = {
     ExportarPDF.doc = new jsPDF({ unit: 'pt', format: 'letter' });
     const doc = ExportarPDF.doc;
     doc.setFont('helvetica', 'normal');
+    ExportarPDF.paginasConEncabezado = new Set();
     const errores = [];
     ExportarPDF.portada(sel);
     const mapa = {
@@ -289,7 +299,9 @@ const ExportarPDF = {
   },
 
   render(el) {
-    const checks = ExportarPDF.MODULOS.map(m =>
+    const tipoEmpresa = (Empresas.activa && Empresas.activa.sector) || '';
+    const visibles = ExportarPDF.MODULOS.filter(m => tipoEmpresa === 'Personal' || m.id !== 'personal');
+    const checks = visibles.map(m =>
       '<label class="chk"><input type="checkbox" value="' + m.id + '" checked> ' + m.nombre + '</label>').join('');
     el.innerHTML =
       '<div class="tarjeta"><h3>Módulos a incluir en el PDF</h3>' +
