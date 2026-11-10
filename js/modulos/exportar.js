@@ -689,9 +689,13 @@ const Exportar = {
   // ---------- Pantalla ----------
   render(el) {
     const emp = Empresas.activa;
+    // Si la empresa activa es de tipo "Personal", solo tiene sentido la hoja de presupuesto
+    // personal. Si es una empresa normal, se quita "Presupuesto personal" de las opciones.
+    const personal = !!(emp && emp.sector === 'Personal');
+    const visibles = Exportar.MODULOS.filter(m => personal ? m.id === 'personal' : m.id !== 'personal');
     const ids = (typeof Seleccion !== 'undefined' && emp) ? Seleccion.ids() : [null, null];
     const A = ids.map(id => (typeof Estados !== 'undefined' ? Estados.etiqueta(id) : '—'));
-    const tarjetas = Exportar.MODULOS.map((m, i) =>
+    const tarjetas = visibles.map((m, i) =>
       '<label class="exp-card"><input type="checkbox" value="' + m.id + '" checked>' +
       '<span class="exp-num">' + m.hoja.slice(0, 2) + '</span>' +
       '<span class="exp-txt"><strong>' + esc(m.nombre) + '</strong><small>' + esc(m.desc) + '</small><em>' + esc(m.hoja) + '</em></span>' +
