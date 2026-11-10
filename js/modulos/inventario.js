@@ -189,11 +189,27 @@ const Inventario = {
       movimientos: datos.movimientos || []
     });
 
-    /* ── Poblar selects de movimientos ── */
+    /* ── Poblar selects de movimientos (conserva la selección actual) ── */
     const actualizarSelects = (productos) => {
       const opts = productos.map(p=>'<option value="'+p.n+'">'+p.n+'</option>').join('');
-      q('#in-mov-prod').innerHTML = opts;
-      q('#in-mov-filtro-prod').innerHTML = '<option value="">— Todos —</option>'+opts;
+
+      const selProd   = q('#in-mov-prod');
+      const selFiltro = q('#in-mov-filtro-prod');
+
+      /* Guarda el valor seleccionado antes de reconstruir */
+      const anteriorProd   = selProd.value;
+      const anteriorFiltro = selFiltro.value;
+
+      selProd.innerHTML   = opts;
+      selFiltro.innerHTML = '<option value="">— Todos —</option>'+opts;
+
+      /* Restaura la selección si el producto todavía existe */
+      if (anteriorProd   && [...selProd.options].some(o=>o.value===anteriorProd))
+        selProd.value = anteriorProd;
+      if (anteriorFiltro && [...selFiltro.options].some(o=>o.value===anteriorFiltro))
+        selFiltro.value = anteriorFiltro;
+      else
+        selFiltro.value = '';
     };
 
     /* ── Render tabla de historial ── */
@@ -391,11 +407,16 @@ const Inventario = {
       else if (e.target.id==='in-buscar') refrescar();
     });
     raiz.addEventListener('change', e => {
-      if (!e.target.matches('#in-mov-prod,#in-mov-tipo,#in-mov-filtro-prod')) refrescar();
-      if (e.target.id==='in-mov-filtro-prod') {
+      /* El filtro de historial: solo re-renderiza la tabla, no recalcula todo */
+      if (e.target.id === 'in-mov-filtro-prod') {
         const x = leer();
         renderHist(x.movimientos, e.target.value);
+        return; /* no llama refrescar() para no perder la selección */
       }
+      /* Selects del formulario de movimiento: no disparan recalculo */
+      if (e.target.matches('#in-mov-prod,#in-mov-tipo')) return;
+      /* Cualquier otro change (selects de categoría/tipo en la tabla) sí recalcula */
+      refrescar();
     });
     raiz.addEventListener('click', e => {
       /* Quitar producto */
