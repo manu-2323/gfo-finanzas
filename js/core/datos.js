@@ -33,15 +33,22 @@ const Datos = {
     return vacio ? vacio() : defecto;
   },
 
-  guardar(clave, valor) {
+  guardar(clave, valor, { silencioso = false } = {}) {
     if (!Datos.empresaId) return;
     Datos.cache[clave] = Datos.copia(valor);
     Datos.pendientes[clave] = (Datos.pendientes[clave] || 0) + 1;
     Datos.poner('pendiente');
     clearTimeout(Datos.temporizador);
+    /* Aviso de guardado: se muestra una vez por ráfaga de cambios, no en cada tecla */
+    clearTimeout(Datos._avisoTimer);
+    if (!silencioso) {
+      Datos._avisoTimer = setTimeout(() => {
+        try { if (typeof Aviso !== 'undefined') Aviso.mostrar('Cambios guardados', 'ok'); } catch(e) {}
+      }, 1200);
+    }
     Datos.temporizador = setTimeout(Datos.sincronizar, 800);
   },
-
+  
   borrar(clave) {
     delete Datos.cache[clave];
     delete Datos.pendientes[clave];
