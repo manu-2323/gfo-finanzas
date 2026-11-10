@@ -343,3 +343,213 @@ a.btn{text-decoration:none;display:inline-block}
 @media(max-width:700px){.dash-hero{padding:22px 20px;flex-wrap:wrap}.dash-hero-decor{display:none}}
 
 
+
+/* ── Semáforo de razones financieras ───────────────────── */
+.sem-bien   { color: #1a7a4a; font-size: 1.1em; }
+.sem-alerta { color: #d97706; font-size: 1.1em; }
+.sem-riesgo { color: #c0392b; font-size: 1.1em; }
+
+.sem-resumen {
+  padding: .6rem 1rem; border-radius: 8px; margin-bottom: 1rem;
+  font-weight: 600; font-size: .9rem;
+}
+.sem-resumen.bien   { background: #d1fae5; color: #065f46; }
+.sem-resumen.alerta { background: #fef3c7; color: #92400e; }
+.sem-resumen.riesgo { background: #fee2e2; color: #991b1b; }
+
+/* ── Tooltip "?" junto al nombre de la razón ───────────── */
+.tip {
+  display: inline-block; width: 16px; height: 16px; line-height: 16px;
+  text-align: center; border-radius: 50%; background: #c8d8e8;
+  color: #1f3a5f; font-size: .72rem; font-weight: 700;
+  cursor: help; vertical-align: middle; margin-left: 4px;
+}
+
+/* ── Columna de recomendación ──────────────────────────── */
+.rec-txt {
+  font-size: .78rem; color: #92400e; background: #fef3c7;
+  padding: 2px 6px; border-radius: 4px; display: inline-block;
+}
+.tabla-razones .rec { max-width: 240px; }
+
+/* ── N/D diferenciado de cero ──────────────────────────── */
+.nd-cero { color: #9ca3af; font-style: italic; }
+
+/* ── Descripción del grupo de razones ─────────────────── */
+.grup-desc { font-weight: 400; font-size: .83rem; color: #555; }
+
+/* ── DuPont mejorado ───────────────────────────────────── */
+.dp-tarj   { min-width: 140px; text-align: center; }
+.dp-val    { font-size: 1.5rem; font-weight: 700; color: #0f5c4d; }
+.dp-nota   { font-size: .78rem; color: #666; }
+
+/* ── Punto de equilibrio: avisos de validación ─────── */
+.eq-aviso {
+  padding: .55rem 1rem; border-radius: 8px; margin-bottom: 8px;
+  font-size: .88rem; line-height: 1.5;
+}
+.eq-aviso-bien   { background: #d1fae5; color: #065f46; }
+.eq-aviso-alerta { background: #fef3c7; color: #92400e; }
+.eq-aviso-riesgo { background: #fee2e2; color: #991b1b; }
+
+/* ── Panel de escenarios ───────────────────────────── */
+.eq-esc-bloque {
+  border: 1px solid #dde3ec; border-radius: 10px;
+  padding: .75rem 1rem; margin-bottom: .6rem; background: #f9fafb;
+}
+.eq-esc-titulo {
+  font-weight: 600; margin-bottom: .5rem; display: flex;
+  align-items: center; gap: 8px;
+}
+.eq-esc-nombre {
+  border: 1px solid #c5cdd9; border-radius: 6px;
+  padding: 3px 8px; font-size: .88rem; flex: 1; max-width: 220px;
+}
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  font-size: 1rem; color: #c0392b; padding: 0 4px;
+}
+.btn-icon:hover { color: #7b241c; }
+
+/* ── Deltas en tabla de escenarios ─────────────────── */
+.eq-delta-bien { color: #1a7a4a; font-size: .85em; }
+.eq-delta-mal  { color: #c0392b; font-size: .85em; }
+
+/* ── Explicación desplegable ───────────────────────── */
+.eq-detalle {
+  border: 1px solid #dde3ec; border-radius: 8px;
+  padding: .6rem 1rem; background: #f4f7fb;
+}
+.eq-detalle summary {
+  cursor: pointer; font-weight: 600; font-size: .9rem; color: #0f5c4d;
+}
+.eq-pasos p { margin: .6rem 0; font-size: .88rem; line-height: 1.6; }
+.eq-pasos strong { color: #0f5c4d; }
+
+/* ── Apalancamiento: avisos ────────────────────────── */
+.ap-aviso {
+  padding: .5rem 1rem; border-radius: 8px; margin-bottom: 6px; font-size: .88rem;
+}
+.ap-aviso-riesgo { background: #fee2e2; color: #991b1b; }
+.ap-aviso-alerta { background: #fef3c7; color: #92400e; }
+.ap-aviso-info   { background: #e0f2fe; color: #0c4a6e; }
+
+/* ── Interpretación con semáforo ───────────────────── */
+.ap-interp-lista { padding-left: 1.2rem; margin: 0; }
+.ap-interp-lista li { margin-bottom: 6px; font-size: .9rem; line-height: 1.6; }
+.ap-niv-bien   { color: #1a7a4a; font-weight: 600; }
+.ap-niv-alerta { color: #d97706; font-weight: 600; }
+.ap-niv-riesgo { color: #c0392b; font-weight: 600; }
+.ap-nota-efecto {
+  font-size: .85rem; color: #555; border-left: 3px solid #0f5c4d;
+  padding-left: .75rem; margin-top: 8px;
+}
+
+/* ── Paso a paso desplegable ───────────────────────── */
+.ap-detalle {
+  border: 1px solid #dde3ec; border-radius: 8px;
+  padding: .6rem 1rem; background: #f4f7fb; margin-top: 10px;
+}
+.ap-detalle summary {
+  cursor: pointer; font-weight: 600; font-size: .9rem; color: #0f5c4d;
+}
+.ap-pasos p { margin: .6rem 0; font-size: .88rem; line-height: 1.6; }
+.ap-pasos strong { color: #0f5c4d; }
+
+
+/* ── Proforma: avisos y semáforos ───────────────── */
+.pf-aviso {
+  padding: .55rem 1rem; border-radius: 8px;
+  margin-bottom: 8px; font-size: .88rem; line-height: 1.6;
+}
+.pf-aviso.bien   { background: #d1fae5; color: #065f46; }
+.pf-aviso.alerta { background: #fef3c7; color: #92400e; }
+.pf-aviso.riesgo { background: #fee2e2; color: #991b1b; }
+
+/* ── Variación en tabla proforma ────────────────── */
+.pf-var-bien { color: #1a7a4a; font-weight: 600; }
+.pf-var-mal  { color: #c0392b; font-weight: 600; }
+
+/* ── Desplegables ───────────────────────────────── */
+.pf-detalle {
+  border: 1px solid #dde3ec; border-radius: 8px;
+  padding: .6rem 1rem; background: #f4f7fb;
+}
+.pf-detalle summary {
+  cursor: pointer; font-weight: 600;
+  font-size: .9rem; color: #0f5c4d;
+}
+
+/* ── Lista de cambios en cuentas ────────────────── */
+.pf-cambios {
+  padding-left: 1.2rem; margin: .4rem 0;
+}
+.pf-cambios li { font-size: .88rem; line-height: 1.7; margin-bottom: 4px; }
+
+/* ── Conclusiones ───────────────────────────────── */
+.pf-conclusiones h3 {
+  font-size: .95rem; margin-bottom: 8px; color: #1f3a5f;
+}
+
+/* Inventario: botón quitar compacto */
+.quitar svg, .quitar-mov svg { pointer-events:none; display:block; }
+
+/* Dashboard mejorado: dash-lista con íconos SVG inline */
+.dash-lista { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.dash-lista .dash-item svg { flex:none; opacity:.8; }
+/* Animación escalonada para dash-entrada en bloques secundarios */
+.dash-entrada > .tarjeta:nth-child(n+8) { animation:entrada .22s ease-out backwards; }
+.dash-entrada > .tarjeta:nth-child(8)  { animation-delay:.08s; }
+.dash-entrada > .tarjeta:nth-child(9)  { animation-delay:.14s; }
+.dash-entrada > .tarjeta:nth-child(10) { animation-delay:.20s; }
+.dash-entrada > .tarjeta:nth-child(11) { animation-delay:.26s; }
+
+/* ── Mensajes de error de validación de campos ───────── */
+.campo-error {
+  display: none;
+  font-size: 11px;
+  color: var(--malo);
+  margin-top: 3px;
+  line-height: 1.4;
+  padding-left: 2px;
+}
+input.invalido + .campo-error { display: block; }
+
+/* ── Tablas: legibilidad en móvil ────────────────────── */
+@media (max-width: 600px) {
+  .tabla-datos th, .tabla-datos td { padding: 6px 7px; font-size: 12px; }
+  .tabla-datos th:not(:first-child):not(:last-child):not(:nth-child(2)),
+  .tabla-datos td:not(:first-child):not(:last-child):not(:nth-child(2)) {
+    display: none;   /* oculta columnas intermedias en pantallas muy estrechas */
+  }
+  .tabla-scroll { -webkit-overflow-scrolling: touch; }
+  .barra-acciones { gap: 8px; }
+  .barra-acciones .btn { font-size: 13px; padding: 9px 12px; }
+}
+
+/* ── Aviso flotante: ícono SVG inline ────────────────── */
+.aviso-flotante {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aviso-flotante::before {
+  content: '';
+  display: block;
+  width: 16px; height: 16px; flex: none;
+  background-color: var(--ok);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.aviso-flotante.mal::before {
+  background-color: var(--malo);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E");
+}
+
+/* ── Consistencia visual: gap en barra-acciones dentro de tarjeta ── */
+.tarjeta .barra-acciones { margin-bottom: 0; }
+.tarjeta + .tarjeta { margin-top: 0; }
+
+/* ── Inventario / Personal: botón quitar compacto ─── */
+.quitar svg, .quitar-mov svg { pointer-events: none; display: block; }
