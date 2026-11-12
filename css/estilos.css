@@ -553,3 +553,95 @@ input.invalido + .campo-error { display: block; }
 
 /* ── Inventario / Personal: botón quitar compacto ─── */
 .quitar svg, .quitar-mov svg { pointer-events: none; display: block; }
+
+/* ── Presupuestos: notas en celdas de caja ─────── */
+.nota-caja {
+  display: block; font-size: .75rem; color: #666;
+  font-weight: 400; line-height: 1.4; margin-top: 2px;
+}
+
+/* ── Notas de origen por sección ───────────────── */
+.sub-nota td {
+  font-size: .78rem; color: #777; font-style: italic;
+  padding: 2px 8px !important; background: none !important;
+}
+
+/* ── Presupuesto personal: barra de historial ─── */
+.pe-hist-barra {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  align-items: center; margin-bottom: 14px;
+  padding: 8px 12px; background: var(--arena-2);
+  border-radius: 10px; min-height: 42px;
+}
+.pe-hist-item {
+  display: inline-flex; align-items: center;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid #dde3ec; background: var(--tarjeta);
+}
+.pe-hist-btn {
+  padding: 5px 12px; font-size: .82rem; font-weight: 600;
+  background: none; border: none; cursor: pointer;
+  color: var(--texto); white-space: nowrap;
+}
+.pe-hist-btn:hover           { background: rgba(15,92,77,.08); color: var(--primario); }
+.pe-hist-activo              { background: var(--primario-bg)!important; color: var(--primario)!important; }
+.pe-hist-edit-activo         { background: #fef3c7!important; color: #92400e!important; }
+.pe-hist-acciones            { display: none; align-items: center; padding: 0 4px; gap: 2px; border-left: 1px solid #dde3ec; }
+.pe-hist-item:hover .pe-hist-acciones { display: inline-flex; }
+.pe-hist-ico {
+  background: none; border: none; cursor: pointer;
+  padding: 4px; border-radius: 4px; color: #6b7788;
+  display: inline-flex; align-items: center;
+}
+.pe-hist-ico:hover         { background: rgba(0,0,0,.07); color: var(--primario); }
+.pe-hist-ico-del:hover     { color: var(--malo); background: var(--malo-bg); }
+
+/* ── Banners de modo historial ───────────────── */
+.pe-banner-hist, .pe-banner-edit {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; border-radius: 10px; margin-bottom: 14px;
+  font-size: .9rem; font-weight: 500;
+}
+.pe-banner-hist { background: #e0f2fe; color: #0c4a6e; border-left: 4px solid #0369a1; }
+.pe-banner-edit { background: #fef3c7; color: #78350f; border-left: 4px solid #d97706; }
+
+/* ── Inventario: fila de edición inline ─────── */
+.in-fila-edit { background: #fefce8 !important; }
+.in-fila-edit input, .in-fila-edit select {
+  padding: 4px 6px; font-size: 12px;
+  border: 1px solid #d97706; border-radius: 5px;
+}
+
+/* Botón peligro (eliminar) — rojo discreto */
+.btn.peligro {
+  color: var(--rojo, #c0392b);
+  border-color: var(--rojo, #c0392b);
+}
+.btn.peligro:hover {
+  background: var(--rojo, #c0392b);
+  color: #fff;
+}
+
+/* Botón pequeño para acciones inline de tabla */
+.btn.pequeno {
+  padding: 2px 10px;
+  font-size: 0.82em;
+  min-height: unset;
+}
+
+/* Corrección para iconos SVG sin dimensiones explícitas */
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.tarjeta svg,
+.vista svg,
+#vista-periodos svg,
+button svg {
+  width: 20px;
+  height: 20px;
+  max-width: 24px;
+  max-height: 24px;
+  flex-shrink: 0;
+}
