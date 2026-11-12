@@ -94,6 +94,40 @@ const Dashboard = {
     };
   },
 
+  /* ── Leer saldo disponible de presupuesto personal (mes actual) ── */
+  datosPersonal() {
+    try {
+      const emp = Empresas.activa || {};
+      if (emp.sector !== 'Personal') return null;
+      const d = Datos.leer('personal', null);
+      if (!d) return null;
+      const ingresos = (d.ingresos || []).reduce((s, v) => s + (Number(v) || 0), 0);
+      const gastos   = (d.gastos   || []).reduce((s, v) => s + (Number(v) || 0), 0);
+      const saldo    = ingresos - gastos;
+      const mes      = d.mes || d.periodo || 'mes actual';
+      return { ingresos, gastos, saldo, mes };
+    } catch(e) { return null; }
+  },
+
+  /* ── Bloque: Presupuesto personal ── */
+  bloquePersonal(pp) {
+    if (!pp) return '';
+    const cls = pp.saldo >= 0 ? 'ok' : 'riesgo';
+    const fila = (n, v, c) => '<div class="dash-fila"><span>'+n+'</span><span><strong class="'+(c||'')+'">'+Fmt.moneda(v)+'</strong></span></div>';
+    return '<div class="tarjeta dash-3 dash-kpi '+cls+'">'+
+      '<h3 style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+Dashboard._svg('personal')+'Presupuesto personal</h3>'+
+      '<p class="nota-pie" style="margin-bottom:10px">'+_esc(pp.mes)+'</p>'+
+      fila('Ingresos del mes', pp.ingresos)+
+      fila('Gastos del mes', pp.gastos)+
+      fila('Saldo disponible', pp.saldo, cls)+
+      (pp.saldo < 0
+        ? '<div class="dash-item riesgo" style="margin-top:8px;font-size:12px">'+Dashboard._svg('alerta',13,13)+' Los gastos superan los ingresos este mes.</div>'
+        : '<div class="dash-item ok" style="margin-top:8px;font-size:12px">'+Dashboard._svg('ok',13,13)+' Los ingresos cubren los gastos del mes.</div>')+
+      '<a href="#personal" class="btn sec" style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:12px">'+
+        Dashboard._svg('personal',14,14)+'Ver detalle</a>'+
+    '</div>';
+  },
+
   /* ── Leer resumen del presupuesto maestro ── */
   datosPresupuesto() {
     try {
@@ -345,12 +379,24 @@ const Dashboard = {
     ).join('');
   },
 
-  accesos() {
+  accesos(alertasActivas) {
     const ocultos = (Empresas.activa && typeof ocultosPara==='function') ? ocultosPara(Empresas.activa.sector) : [];
+    // Módulos con alertas activas para destacarlos
+    const conAlerta = new Set();
+    (alertasActivas||[]).forEach(a => {
+      if (/liquidez|corriente|prueba/i.test(a.texto)) conAlerta.add('analisis');
+      if (/presupuesto|caja|financiamiento/i.test(a.texto)) conAlerta.add('presupuestos');
+      if (/inventario|agotado|stock/i.test(a.texto)) conAlerta.add('inventario');
+      if (/patrimonio negativo|balance no cuadra|pierde dinero/i.test(a.texto)) conAlerta.add('estados');
+      if (/equilibrio/i.test(a.texto)) conAlerta.add('equilibrio');
+    });
     return SECCIONES.map(s =>
-      s.items.filter(i=>i.id!=='panel'&&!ocultos.includes(i.id)).map(i =>
-        '<a class="dash-acceso" href="#'+i.id+'">'+icono(i.icono)+'<span>'+esc(i.nombre)+'</span></a>'
-      ).join('')
+      s.items.filter(i=>i.id!=='panel'&&!ocultos.includes(i.id)).map(i => {
+        const badge = conAlerta.has(i.id)
+          ? '<span style="background:var(--malo);color:#fff;border-radius:50%;width:8px;height:8px;display:inline-block;margin-left:4px;vertical-align:middle"></span>'
+          : '';
+        return '<a class="dash-acceso" href="#'+i.id+'">'+icono(i.icono)+'<span>'+esc(i.nombre)+badge+'</span></a>';
+      }).join('')
     ).join('');
   },
 
@@ -430,14 +476,22 @@ const Dashboard = {
   /* ── RENDER PRINCIPAL ── */
   render(el) {
     Dashboard.limpiar();
+    el.innerHTML = ''; // Limpia la vista antes de redibujar para evitar datos viejos
     Dashboard.C = Tema.paleta();
     const emp = Empresas.activa || {}, D = Dashboard.datos();
     const pb  = Dashboard.datosPresupuesto();
     const eq  = Dashboard.datosEquilibrio();
     const inv = Dashboard.datosInventario();
+    const pp  = Dashboard.datosPersonal();
+    const alertasCalc = D && D.hayDatos && D.ia>=0 && D.ib>=0 && !D.vacio[D.ib]
+      ? Dashboard.alertas(D, Dashboard.calcular(D), pb, eq, inv)
+      : [];
     const accesos = '<div class="tarjeta dash-12"><h3 style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'+
       Dashboard._svg('refresh')+'Accesos rápidos</h3>'+
-      '<div class="dash-accesos">'+Dashboard.accesos()+'</div></div>';
+      (alertasCalc.some(a=>a.nivel!=='ok')
+        ? '<p class="nota-pie" style="margin-bottom:8px">Los módulos con punto rojo tienen alertas activas que merecen revisión.</p>'
+        : '')+
+      '<div class="dash-accesos">'+Dashboard.accesos(alertasCalc)+'</div></div>';
 
     /* Sin períodos */
     if (!D || D.ia<0 || D.ib<0) {
@@ -487,8 +541,15 @@ const Dashboard = {
 
       /* Hero */
       Dashboard.hero({ ant:emp.sector||'Empresa', titulo:'Hola, '+(emp.nombre||'tu empresa'),
-        sub:sub, extra:chips }) +
-
+        sub:sub, extra: chips +
+          '<div style="font-size:12px;opacity:.75;margin-top:4px">'+
+            (D.ia===D.ib
+              ? 'Período seleccionado: <strong>'+act+'</strong>'
+              : 'Período base: <strong>'+base+'</strong> · Período analizado: <strong>'+act+'</strong>')+
+            ' · Empresa: <strong>'+esc(emp.nombre||'—')+'</strong>'+
+            (emp.sector ? ' · Sector: <strong>'+esc(emp.sector)+'</strong>' : '')+
+          '</div>'
+      }) +
       /* KPIs financieros (6 × dash-2) */
       Dashboard.tarjetasKpi(D, v) +
 
@@ -529,9 +590,10 @@ const Dashboard = {
         : '<p class="nota-pie" style="margin-top:8px">Sin datos de presupuesto de caja.</p>') +
       '</div>'+
 
-      /* Fila: Equilibrio (3) + Inventario (3) + espacio (6) */
+      /* Fila: Equilibrio (3) + Inventario (3) + Personal si aplica */
       Dashboard.bloqueEquilibrio(eq) +
       Dashboard.bloqueInventario(inv) +
+      Dashboard.bloquePersonal(Dashboard.datosPersonal()) +
 
       /* Accesos rápidos */
       accesos +

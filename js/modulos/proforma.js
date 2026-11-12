@@ -9,15 +9,43 @@ const Proforma = {
     const pct = (x, y) => y ? Math.round(x / y * 10000) / 100 : 0;
     const un = r[1].utilidadNeta;
     const div = (Number(d.bg.utilidadesRetenidas[0]) || 0) + un - b('utilidadesRetenidas');
-    return {
+    const base = {
       crecimiento: 10, costoPct: pct(e('costoVentas'), e('ventas')),
       gVentaPct: pct(e('gastosVenta'), e('ventas')), gAdminPct: pct(e('gastosAdmin'), e('ventas')),
       depreciacion: e('depreciacion'), intereses: e('intereses'), isr: Number(d.isr) || 0,
       cxcPct: pct(b('cxc'), e('ventas')), invPct: pct(b('inventarios'), e('costoVentas')),
       cxpPct: pct(b('cxp'), e('costoVentas')), compraAF: e('depreciacion'),
       prestCPDelta: 0, prestLPDelta: 0,
-      dividendosPct: un > 0 ? Math.max(0, Math.round(div / un * 100)) : 0
+      dividendosPct: un > 0 ? Math.max(0, Math.round(div / un * 100)) : 0,
+      _fuentePresupuesto: false
     };
+    // Si hay un presupuesto maestro guardado, calculamos el crecimiento implícito
+    // y usamos sus totales como supuesto base más realista que el 10 % genérico.
+    try {
+      const pr = Datos.leer('presupuestos', null);
+      if (pr && e('ventas') > 0) {
+        const op = Presupuestos.operativo(pr);
+        const totVentas = op.reduce((s,o)=>s+o.ventas, 0);
+        const totCosto  = op.reduce((s,o)=>s+o.costoVentas, 0);
+        const totGastos = op.reduce((s,o)=>s+o.gastos, 0);
+        const totInt    = op.reduce((s,o)=>s+o.intereses, 0);
+        const ca        = Presupuestos.caja(pr, op);
+        const saldoCaja = ca[ca.length-1].final;
+        const crecImpl  = Math.round((totVentas / e('ventas') - 1) * 1000) / 10;
+        base.crecimiento        = isFinite(crecImpl) ? crecImpl : base.crecimiento;
+        base.costoPct           = totVentas ? Math.round(totCosto  / totVentas * 10000) / 100 : base.costoPct;
+        base.gVentaPct          = 0;   // en el presupuesto los gastos son un bloque único
+        base.gAdminPct          = totVentas ? Math.round(totGastos / totVentas * 10000) / 100 : base.gAdminPct;
+        base.intereses          = totInt || base.intereses;
+        base._fuentePresupuesto = true;
+        base._totVentasPres     = totVentas;
+        base._totCostoPres      = totCosto;
+        base._totGastosPres     = totGastos;
+        base._saldoCajaPres     = saldoCaja;
+        base._mesesPres         = pr.meses;
+      }
+    } catch(err) { /* si falla, usa los defaults */ }
+    return base;
   },
   obtener() { return Datos.leer('proforma', Proforma.porDefecto()); },
 
@@ -245,6 +273,61 @@ const Proforma = {
       '</div>';
   },
 
+    // ── Variables que provocan los principales cambios en el resultado ────────
+  htmlDrivers(d, r, p, s) {
+    const e = k => Number(d.er[k][1]) || 0;
+    const A = d.anios[1];
+    const drivers = [];
+
+    // Ventas
+    const dVentas = p.ventas - e('ventas');
+    if (Math.abs(dVentas) > 0)
+      drivers.push({ label:'Crecimiento de ventas ('+Fmt.num(s.crecimiento,1)+' %)',
+        impacto: dVentas, detalle: 'De '+Fmt.moneda(e('ventas'))+' a '+Fmt.moneda(p.ventas) });
+
+    // Costo de ventas
+    const dCosto = p.costoVentas - (e('costoVentas') / e('ventas') * p.ventas);
+    if (Math.abs(dCosto) > 50)
+      drivers.push({ label:'Cambio en % costo de ventas ('+Fmt.num(s.costoPct,2)+' %)',
+        impacto: -dCosto, detalle: 'Costo proyectado: '+Fmt.moneda(p.costoVentas) });
+
+    // Gastos operativos
+    const gastosHist = e('gastosVenta') + e('gastosAdmin');
+    const gastosProf = p.gVenta + p.gAdmin;
+    const dGastos = gastosProf - gastosHist / e('ventas') * p.ventas;
+    if (Math.abs(dGastos) > 50)
+      drivers.push({ label:'Cambio en gastos operativos',
+        impacto: -dGastos, detalle: 'Gastos proyectados: '+Fmt.moneda(gastosProf) });
+
+    // Intereses
+    const dInt = p.intereses - e('intereses');
+    if (Math.abs(dInt) > 0)
+      drivers.push({ label:'Cambio en gastos por intereses',
+        impacto: -dInt, detalle: 'De '+Fmt.moneda(e('intereses'))+' a '+Fmt.moneda(p.intereses) });
+
+    // FER
+    if (Math.abs(p.fer) > 0.5)
+      drivers.push({ label:'Financiamiento externo requerido (FER)',
+        impacto: -p.fer, detalle: p.fer > 0
+          ? 'Se necesitan '+Fmt.moneda(p.fer)+' adicionales para financiar el crecimiento.'
+          : 'Excedente de fondos: '+Fmt.moneda(-p.fer) });
+
+    if (!drivers.length) return '';
+    drivers.sort((a,b)=>Math.abs(b.impacto)-Math.abs(a.impacto));
+    return '<details class="pf-detalle" style="margin-top:10px"><summary>¿Qué variables explican los principales cambios respecto al año ' + A + '?</summary>' +
+      '<table class="tabla-datos" style="margin-top:8px">' +
+      '<tr><th>Variable</th><th>Impacto en utilidad neta</th><th>Detalle</th></tr>' +
+      drivers.map(dr =>
+        '<tr><td>'+dr.label+'</td>' +
+        '<td><span class="'+(dr.impacto>=0?'pf-var-bien':'pf-var-mal')+'">' +
+          (dr.impacto>=0?'▲ +':'▼ ')+Fmt.moneda(Math.abs(dr.impacto))+'</span></td>' +
+        '<td style="font-size:.85rem;color:#555">'+dr.detalle+'</td></tr>'
+      ).join('') +
+      '</table>' +
+      '<p class="nota-pie">Impacto estimado sobre la utilidad neta proyectada. Las variaciones en ventas y costos se calculan respecto a lo que hubiera resultado con los ratios del año base aplicados al mismo nivel de actividad.</p>' +
+      '</details>';
+  },
+
   campo(id, et, v) {
     return '<label class="campo corto" style="flex:1;min-width:150px">' + et +
       '<input type="text" inputmode="decimal" data-validar="numero" id="' + id + '" value="' + (v ?? '') + '"></label>';
@@ -349,7 +432,8 @@ const Proforma = {
       '<div id="sec-proforma">' +
         '<div class="aviso">Proyección del año ' + (A + 1) + ' a partir de los Estados financieros de ' + A + '. ' +
           'Método crítico: el efectivo se mantiene y la diferencia entre activos y (pasivos + patrimonio) es el Financiamiento Externo Requerido (FER).</div>' +
-        '<h2 class="titulo-seccion">Supuestos principales</h2>' +
+      '<div id="pf-banner-pres"></div>' +
+      '<h2 class="titulo-seccion">Supuestos principales</h2>' +
         '<div class="barra-acciones">' +
           C('pf-crec',  'Crecimiento de ventas (%)', s.crecimiento) +
           C('pf-costo', 'Costo de ventas (% de ventas)', s.costoPct) +
@@ -413,11 +497,39 @@ const Proforma = {
       const p   = Proforma.calcular(d, r, x);
       const esc = Proforma.escenarios(d, r, x);
 
+      // ── Banner de integración con presupuesto maestro ──────────────────
+      const bp = q('#pf-banner-pres');
+      if (bp) {
+        const s0 = Proforma.obtener();
+        if (s0._fuentePresupuesto) {
+          bp.innerHTML =
+            '<div class="pf-aviso bien" style="margin-bottom:12px">' +
+            '✔ <strong>Supuestos base tomados del Presupuesto maestro.</strong> ' +
+            'Ventas totales presupuestadas: ' + Fmt.moneda(s0._totVentasPres) +
+            ' (' + s0._mesesPres.join(', ') + '). ' +
+            'Crecimiento implícito respecto al año base: ' + Fmt.num(x.crecimiento, 1) + ' %. ' +
+            'Saldo final del presupuesto de caja: ' + Fmt.moneda(s0._saldoCajaPres) + '. ' +
+            'Puedes ajustar cualquier supuesto sin perder los datos del presupuesto.' +
+            '</div>';
+        } else {
+          bp.innerHTML =
+            '<div class="pf-aviso alerta" style="margin-bottom:12px">' +
+            'ℹ Los supuestos se calcularon desde los estados financieros históricos. ' +
+            'Si ya tienes un Presupuesto maestro guardado, usa el botón ' +
+            '"Restablecer desde los estados" para que los supuestos reflejen el presupuesto.' +
+            '</div>';
+        }
+      }
+
+      // ── Variables que provocan los principales cambios ─────────────────
+      Proforma._htmlDrivers = Proforma.htmlDrivers(d, r, p, x);
+
       q('#pf-tabla').innerHTML       = Proforma.tablaProforma(d, r, p);
       q('#pf-fer').innerHTML         = Proforma.htmlFER(p, A);
       q('#pf-cuadre').innerHTML      = Proforma.htmlCuadre(p);
       q('#pf-cambios').innerHTML     = Proforma.htmlCambios(d, r, p);
-      q('#pf-conclusiones').innerHTML = Proforma.htmlConclusiones(d, r, p, x);
+      q('#pf-conclusiones').innerHTML = Proforma.htmlConclusiones(d, r, p, x) +
+        (Proforma._htmlDrivers || '');
       q('#pf-esc-tabla').innerHTML   = Proforma.tablaEscenarios(d, esc, x);
       q('#sec-reporte').innerHTML    = Proforma.reporte(d, r, p);
     };
