@@ -238,7 +238,7 @@ const Presupuestos = {
 
     let filaCats = '';
     catTotales.forEach(c => {
-      filaCats += '<tr><td><span style="padding-left:16px;display:inline-block">'+_esc(c.nombre)+'</span></td>'+
+      filaCats += '<tr><td><span style="padding-left:16px;display:inline-block">'+esc(c.nombre)+'</span></td>'+
         (d.cats[catTotales.indexOf(c)].montos.map(v=>'<td>'+Fmt.moneda(v)+'</td>').join(''))+
         '<td>'+Fmt.moneda(c.total)+'</td></tr>';
     });
@@ -377,7 +377,7 @@ const Presupuestos = {
       '<div class="tabla-scroll"><table class="tabla-datos">'+
       '<tr><th>Categoría</th><th class="mes-0">'+d.meses[0]+'</th><th class="mes-1">'+d.meses[1]+'</th><th class="mes-2">'+d.meses[2]+'</th></tr>';
     (d.cats||[]).forEach((c,ci)=>{
-      html+='<tr><td><input type="text" data-validar="nombre" id="pr-cat-nom-'+ci+'" value="'+_esc(c.nombre)+'" style="min-width:140px"></td>'+
+      html+='<tr><td><input type="text" data-validar="nombre" id="pr-cat-nom-'+ci+'" value="'+esc(c.nombre)+'" style="min-width:140px"></td>'+
         [0,1,2].map(i=>'<td>'+P.inp('pr-cat-'+ci+'-'+i,c.montos[i])+'</td>').join('')+'</tr>'+
         '<tr style="font-size:0.9em;color:#555"><td style="padding-left:16px">— de los cuales depreciación</td>'+
         [0,1,2].map(i=>'<td>'+P.inp('pr-catd-'+ci+'-'+i,c.depre[i])+'</td>').join('')+'</tr>';
